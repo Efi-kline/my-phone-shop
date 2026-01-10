@@ -1,12 +1,17 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
   const [profile, setProfile] = useState<any>(null);
-  const supabase = createClientComponentClient();
+  const [supabase] = useState(() =>
+    createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  );
   const router = useRouter();
 
   useEffect(() => {
@@ -20,12 +25,17 @@ export default function Navbar() {
       }
     };
     fetchProfile();
-    
+
     // רענון כשיש שינוי בהתחברות
-    supabase.auth.onAuthStateChange(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       fetchProfile();
       router.refresh();
     });
+
+    // ניקוי ה-subscription כשהקומפוננטה נהרסת
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [supabase, router]);
 
   const handleLogout = async () => {

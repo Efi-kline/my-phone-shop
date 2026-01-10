@@ -1,10 +1,15 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import Navbar from '@/components/Navbar';
 
 export default function ProfilePage() {
-  const supabase = createClientComponentClient();
+  const [supabase] = useState(() =>
+    createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  );
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [formData, setFormData] = useState({ full_name: '', phone: '', address: '' });
@@ -26,15 +31,30 @@ export default function ProfilePage() {
   }, [supabase]);
 
   const handleUpdate = async () => {
-    setLoading(true);
-    const { error } = await supabase
-      .from('profiles')
-      .update(formData)
-      .eq('id', user.id);
+    if (!user) {
+      alert("❌ אין משתמש מחובר");
+      return;
+    }
 
-    if (!error) alert("✅ הפרטים נשמרו בהצלחה!");
-    else alert("❌ שגיאה בשמירה");
-    setLoading(false);
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(formData)
+        .eq('id', user.id);
+
+      if (error) {
+        alert("❌ שגיאה בשמירה");
+        console.error(error);
+      } else {
+        alert("✅ הפרטים נשמרו בהצלחה!");
+      }
+    } catch (error) {
+      alert("❌ שגיאה לא צפויה");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

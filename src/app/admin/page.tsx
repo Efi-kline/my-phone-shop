@@ -1,14 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
 
 export default function AdminPage() {
-  const supabase = createClientComponentClient();
+  const [supabase] = useState(() =>
+    createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  );
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
   const [form, setForm] = useState({
     id: null,
     name: '',
@@ -29,27 +36,88 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    const checkAdminAccess = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        setCheckingAuth(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.role === 'admin') {
+        setIsAdmin(true);
+        fetchProducts();
+      }
+
+      setCheckingAuth(false);
+    };
+
+    checkAdminAccess();
+  }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const productData = {
-      name: form.name,
-      price: parseFloat(form.price),
-      description: form.description,
-      image_url: form.image_url
-    };
+    try {
+      const productData = {
+        name: form.name,
+        price: parseFloat(form.price),
+        description: form.description,
+        image_url: form.image_url
+      };
 
-    if (form.id) {
-      await supabase.from('products').update(productData).eq('id', form.id);
-    } else {
-      await supabase.from('products').insert([productData]);
+      let error;
+      if (form.id) {
+        const result = await supabase.from('products').update(productData).eq('id', form.id);
+        error = result.error;
+      } else {
+        const result = await supabase.from('products').insert([productData]);
+        error = result.error;
+      }
+
+      if (error) {
+        alert("❌ שגיאה בשמירת המוצר");
+        console.error(error);
+        return;
+      }
+
+      setForm({ id: null, name: '', price: '', description: '', image_url: '' });
+      fetchProducts();
+    } catch (error) {
+      alert("❌ שגיאה לא צפויה");
+      console.error(error);
     }
-
-    setForm({ id: null, name: '', price: '', description: '', image_url: '' });
-    fetchProducts();
   };
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center" dir="rtl">
+        <div className="text-center">
+          <div className="text-lg font-bold text-slate-600">בודק הרשאות...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center" dir="rtl">
+        <div className="text-center bg-white p-8 rounded-3xl shadow-lg border border-red-200">
+          <div className="text-6xl mb-4">🔒</div>
+          <h1 className="text-2xl font-black text-red-600 mb-2">גישה נדחתה</h1>
+          <p className="text-slate-600 mb-6">אין לך הרשאות לגשת לעמוד זה</p>
+          <Link href="/" className="px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-blue-600 inline-block">
+            חזרה לחנות
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 p-8" dir="rtl">

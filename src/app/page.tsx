@@ -1,10 +1,15 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import Navbar from '@/components/Navbar';
 
 export default function HomePage() {
-  const supabase = createClientComponentClient();
+  const [supabase] = useState(() =>
+    createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  );
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -18,23 +23,45 @@ export default function HomePage() {
   }, [supabase]);
 
   const addToCart = async (product: any) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      alert("🔒 עליך להתחבר כדי להוסיף מוצרים לסל");
-      return;
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        alert("🔒 עליך להתחבר כדי להוסיף מוצרים לסל");
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('cart')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError) {
+        alert("❌ שגיאה בטעינת הסל");
+        console.error(profileError);
+        return;
+      }
+
+      const currentCart = profile?.cart || [];
+      const updatedCart = [...currentCart, product];
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ cart: updatedCart })
+        .eq('id', user.id);
+
+      if (updateError) {
+        alert("❌ שגיאה בהוספה לסל");
+        console.error(updateError);
+        return;
+      }
+
+      alert(`🛒 ${product.name} נוסף לסל בהצלחה!`);
+    } catch (error) {
+      alert("❌ שגיאה לא צפויה");
+      console.error(error);
     }
-
-    const { data: profile } = await supabase.from('profiles').select('cart').eq('id', user.id).single();
-    const currentCart = profile?.cart || [];
-    const updatedCart = [...currentCart, product];
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ cart: updatedCart })
-      .eq('id', user.id);
-
-    if (!error) alert(`🛒 ${product.name} נוסף לסל בהצלחה!`);
   };
 
   return (
