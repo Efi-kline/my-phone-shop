@@ -1,51 +1,81 @@
-import { createClient } from '@supabase/supabase-js';
+'use client';
+import { useEffect, useState } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import Navbar from '@/components/Navbar';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+export default function HomePage() {
+  const supabase = createClientComponentClient();
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default async function HomePage() {
-  // שליפת הנתונים
-  const { data: phones, error } = await supabase
-    .from('phones')
-    .select('*');
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const { data } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+      if (data) setProducts(data);
+      setLoading(false);
+    };
+    fetchProducts();
+  }, [supabase]);
 
-  if (error) return <div className="p-10 text-center text-red-500">שגיאה: {error.message}</div>;
+  const addToCart = async (product: any) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      alert("🔒 עליך להתחבר כדי להוסיף מוצרים לסל");
+      return;
+    }
+
+    const { data: profile } = await supabase.from('profiles').select('cart').eq('id', user.id).single();
+    const currentCart = profile?.cart || [];
+    const updatedCart = [...currentCart, product];
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ cart: updatedCart })
+      .eq('id', user.id);
+
+    if (!error) alert(`🛒 ${product.name} נוסף לסל בהצלחה!`);
+  };
 
   return (
-    <div className="min-h-screen bg-white p-10" dir="rtl">
-      <h1 className="text-4xl font-bold text-center mb-10 text-blue-900">הקטלוג המלא - מודיעין עילית</h1>
+    <div className="min-h-screen bg-slate-50" dir="rtl">
+      <Navbar />
       
-      {/* כאן קורה הקסם - הלולאה שעוברת על כל המכשירים */}
-      <div className="flex flex-wrap justify-center gap-8">
-        {phones?.map((phone) => (
-          <div key={phone.id} className="w-72 border-2 border-gray-100 rounded-2xl shadow-lg p-5 flex flex-col items-center hover:border-blue-500 transition-colors">
-            {/* תמונה */}
-            <div className="h-48 w-full flex items-center justify-center bg-gray-50 rounded-xl mb-4">
-              <img 
-                src={phone.image_url || 'https://via.placeholder.com/150'} 
-                alt={phone.name}
-                className="max-h-full max-w-full object-contain"
-              />
-            </div>
+      <main className="max-w-7xl mx-auto px-6 py-12">
+        <header className="mb-10 text-center md:text-right">
+          <h1 className="text-4xl font-black text-slate-900 mb-2">המכשירים החמים</h1>
+          <p className="text-slate-500 text-lg">שדרג את החוויה שלך עם הטכנולוגיה החדשה ביותר</p>
+        </header>
 
-            {/* פרטים */}
-            <h2 className="text-xl font-bold text-gray-800 text-center">{phone.name}</h2>
-            <p className="text-gray-500 text-sm text-center mt-2 flex-grow">{phone.description}</p>
-            
-            <div className="mt-4 w-full flex justify-between items-center bg-blue-50 p-3 rounded-lg">
-              <span className="text-2xl font-black text-blue-700">₪{phone.price}</span>
-              <button className="bg-blue-600 text-white px-4 py-1 rounded-md font-bold">קנה עכשיו</button>
-            </div>
+        {loading ? (
+          <div className="text-center py-20 text-slate-400">טוען מוצרים...</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {products.map((product) => (
+              <div key={product.id} className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 hover:shadow-xl transition-all group">
+                <div className="aspect-square bg-slate-50 rounded-2xl mb-4 overflow-hidden relative">
+                  {product.image_url ? (
+                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-300">אין תמונה</div>
+                  )}
+                </div>
+                <h3 className="font-bold text-lg text-slate-900 mb-1">{product.name}</h3>
+                <p className="text-sm text-slate-500 mb-4 h-10 overflow-hidden">{product.description}</p>
+                <div className="flex items-center justify-between mt-auto">
+                  <span className="text-blue-600 font-black text-xl">₪{product.price}</span>
+                  <button 
+                    onClick={() => addToCart(product)}
+                    className="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-blue-600 transition-colors shadow-lg shadow-blue-100"
+                  >
+                    + הוסף לסל
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      
-      {/* הודעה אם אין מכשירים בכלל */}
-      {(!phones || phones.length === 0) && (
-        <p className="text-center text-gray-400 mt-20">אין מכשירים להצגה. הוסף מכשירים בדף הניהול.</p>
-      )}
+        )}
+      </main>
     </div>
   );
 }
