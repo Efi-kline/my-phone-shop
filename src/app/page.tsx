@@ -17,7 +17,7 @@ export default function HomePage() {
     const fetchProducts = async () => {
       try {
         const { data, error } = await supabase
-          .from('products')
+          .from('phones')
           .select('*')
           .order('created_at', { ascending: false });
 

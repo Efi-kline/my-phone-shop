@@ -27,10 +27,10 @@ export default function AdminPage() {
   const fetchProducts = async () => {
     setLoading(true);
     const { data } = await supabase
-      .from('products')
+      .from('phones')
       .select('*')
       .order('created_at', { ascending: false });
-    
+
     if (data) setProducts(data);
     setLoading(false);
   };
@@ -73,10 +73,10 @@ export default function AdminPage() {
 
       let error;
       if (form.id) {
-        const result = await supabase.from('products').update(productData).eq('id', form.id);
+        const result = await supabase.from('phones').update(productData).eq('id', form.id);
         error = result.error;
       } else {
-        const result = await supabase.from('products').insert([productData]);
+        const result = await supabase.from('phones').insert([productData]);
         error = result.error;
       }
 
