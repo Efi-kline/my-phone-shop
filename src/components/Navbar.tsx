@@ -27,9 +27,20 @@ export default function Navbar() {
     fetchProfile();
 
     // רענון כשיש שינוי בהתחברות
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      fetchProfile();
-      router.refresh();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.email);
+
+      if (event === 'SIGNED_IN' && session?.user) {
+        // טען את הפרופיל מיד אחרי התחברות
+        const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+        setProfile(data);
+        router.refresh();
+      } else if (event === 'SIGNED_OUT') {
+        setProfile(null);
+        router.refresh();
+      } else {
+        fetchProfile();
+      }
     });
 
     // ניקוי ה-subscription כשהקומפוננטה נהרסת
