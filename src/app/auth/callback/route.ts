@@ -35,15 +35,16 @@ export async function GET(request: Request) {
 
       // בדיקה אם המשתמש קיים בטבלת profiles
       if (data.user) {
-        const { data: existingProfile, error: profileCheckError } = await supabase
+        const { data: existingProfile } = await supabase
           .from('profiles')
           .select('id')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
 
         // אם אין פרופיל, צור אחד חדש
-        if (!existingProfile && !profileCheckError) {
-          await supabase.from('profiles').insert([
+        if (!existingProfile) {
+          console.log('יצירת פרופיל חדש למשתמש:', data.user.email);
+          const { error: insertError } = await supabase.from('profiles').insert([
             {
               id: data.user.id,
               full_name: data.user.user_metadata.full_name || data.user.user_metadata.name || '',
@@ -52,19 +53,26 @@ export async function GET(request: Request) {
               cart: [],
             },
           ]);
+
+          if (insertError) {
+            console.error('שגיאה ביצירת פרופיל:', insertError);
+          }
         }
 
         // המתן קצר כדי לוודא שהפרופיל נשמר
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 200));
 
         // בדיקה אם המשתמש הוא אדמין
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
+
+        console.log('פרופיל משתמש:', profile);
 
         if (profile?.role === 'admin') {
+          console.log('מעביר לדף אדמין');
           return NextResponse.redirect(`${requestUrl.origin}/admin`);
         }
       }
