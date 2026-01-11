@@ -96,9 +96,9 @@ export default function AdminPage() {
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center" dir="rtl">
+      <div className="min-h-screen bg-black flex items-center justify-center" dir="rtl">
         <div className="text-center">
-          <div className="text-lg font-bold text-slate-600">בודק הרשאות...</div>
+          <div className="text-lg font-bold text-[#f5e6d6]">בודק הרשאות...</div>
         </div>
       </div>
     );
@@ -106,12 +106,12 @@ export default function AdminPage() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center" dir="rtl">
-        <div className="text-center bg-white p-8 rounded-3xl shadow-lg border border-red-200">
+      <div className="min-h-screen bg-black flex items-center justify-center" dir="rtl">
+        <div className="text-center bg-white p-8 rounded-2xl shadow-lg">
           <div className="text-6xl mb-4">🔒</div>
           <h1 className="text-2xl font-black text-red-600 mb-2">גישה נדחתה</h1>
-          <p className="text-slate-600 mb-6">אין לך הרשאות לגשת לעמוד זה</p>
-          <Link href="/" className="px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-blue-600 inline-block">
+          <p className="text-gray-600 mb-6">אין לך הרשאות לגשת לעמוד זה</p>
+          <Link href="/" className="px-6 py-3 bg-[#c07830] text-[#f5e6d6] rounded-xl font-bold hover:bg-[#a86828] inline-block">
             חזרה לחנות
           </Link>
         </div>
@@ -120,28 +120,29 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8" dir="rtl">
+    <div className="min-h-screen bg-black p-8" dir="rtl">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-black text-slate-900">ניהול מלאי</h1>
-          <Link href="/" className="px-4 py-2 bg-white border rounded-xl font-bold shadow-sm hover:bg-slate-50"> חזרה לחנות </Link>
+          <h1 className="text-3xl font-black text-[#c07830]">ניהול מלאי</h1>
+          <Link href="/" className="px-4 py-2 bg-white border border-[#c07830] rounded-xl font-bold shadow-sm hover:bg-[#f5e6d6]"> חזרה לחנות </Link>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow-sm border mb-8">
-          <h2 className="text-xl font-bold mb-4">{form.id ? 'עריכת מוצר' : 'הוספת מוצר חדש'}</h2>
+        <div className="bg-white p-6 rounded-2xl shadow-lg mb-8">
+          <h2 className="text-xl font-bold mb-4 text-gray-900">{form.id ? 'עריכת מוצר' : 'הוספת מוצר חדש'}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input placeholder="שם המכשיר" className="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-blue-500" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
-            <input placeholder="מחיר" type="number" className="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-blue-500" value={form.price} onChange={e => setForm({...form, price: e.target.value})} required />
-            <textarea placeholder="תיאור" className="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-blue-500 md:col-span-2 h-24" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
-            <button type="submit" className="md:col-span-2 py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-blue-600 transition-all shadow-lg shadow-blue-100">
+            <input placeholder="שם המכשיר" className="p-4 bg-gray-50 border-2 border-gray-200 rounded-xl outline-none focus:border-[#c07830]" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
+            <input placeholder="מחיר" type="number" className="p-4 bg-gray-50 border-2 border-gray-200 rounded-xl outline-none focus:border-[#c07830]" value={form.price} onChange={e => setForm({...form, price: e.target.value})} required />
+            <input placeholder="קישור לתמונה (URL)" className="p-4 bg-gray-50 border-2 border-gray-200 rounded-xl outline-none focus:border-[#c07830] md:col-span-2" value={form.image_url} onChange={e => setForm({...form, image_url: e.target.value})} />
+            <textarea placeholder="תיאור" className="p-4 bg-gray-50 border-2 border-gray-200 rounded-xl outline-none focus:border-[#c07830] md:col-span-2 h-24" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
+            <button type="submit" className="md:col-span-2 py-4 bg-[#c07830] text-[#f5e6d6] font-bold rounded-xl hover:bg-[#a86828] transition-all shadow-lg">
               {form.id ? 'עדכן מכשיר' : 'פרסם מכשיר'}
             </button>
           </form>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-sm border overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <table className="w-full text-right">
-            <thead className="bg-slate-800 text-white">
+            <thead className="bg-[#c07830] text-[#f5e6d6]">
               <tr>
                 <th className="p-4">מוצר</th>
                 <th className="p-4">מחיר</th>
@@ -150,11 +151,11 @@ export default function AdminPage() {
             </thead>
             <tbody>
               {products.map(p => (
-                <tr key={p.id} className="border-b">
-                  <td className="p-4 font-bold">{p.name}</td>
-                  <td className="p-4 font-black text-blue-600">₪{p.price}</td>
+                <tr key={p.id} className="border-b hover:bg-gray-50">
+                  <td className="p-4 font-bold text-gray-900">{p.name}</td>
+                  <td className="p-4 font-black text-[#c07830]">₪{p.price.toLocaleString()}</td>
                   <td className="p-4">
-                    <button onClick={() => setForm(p)} className="text-blue-500 font-bold hover:underline">ערוך</button>
+                    <button onClick={() => setForm(p)} className="text-[#c07830] font-bold hover:underline">ערוך</button>
                   </td>
                 </tr>
               ))}
