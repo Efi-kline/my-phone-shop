@@ -16,9 +16,13 @@ export default function Navbar() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      console.log('🔍 Navbar: מנסה לטעון פרופיל...');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('👤 Navbar: משתמש מחובר?', user?.email, 'שגיאה?', userError);
+
       if (user) {
-        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        console.log('📋 Navbar: פרופיל נטען:', data, 'שגיאה?', error);
         setProfile(data);
       } else {
         setProfile(null);
