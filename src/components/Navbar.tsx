@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/ssr';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -9,7 +9,22 @@ export default function Navbar() {
   const [supabase] = useState(() =>
     createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return document.cookie.split(';').map(c => {
+              const [name, ...v] = c.trim().split('=');
+              return { name, value: v.join('=') };
+            });
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              document.cookie = `${name}=${value}; path=/; ${options?.maxAge ? `max-age=${options.maxAge}` : ''}`;
+            });
+          },
+        },
+      }
     )
   );
   const router = useRouter();
