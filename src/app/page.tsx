@@ -15,9 +15,24 @@ export default function HomePage() {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-      if (data) setProducts(data);
-      setLoading(false);
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('שגיאה בטעינת מוצרים:', error);
+        }
+
+        if (data) {
+          setProducts(data);
+        }
+      } catch (error) {
+        console.error('שגיאה לא צפויה:', error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchProducts();
   }, [supabase]);
@@ -76,6 +91,12 @@ export default function HomePage() {
 
         {loading ? (
           <div className="text-center py-20 text-[#f5e6d6]">טוען מוצרים...</div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-2xl">
+            <div className="text-6xl mb-4">📱</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">אין מוצרים להצגה</h2>
+            <p className="text-gray-600">המוצרים יתווספו בקרוב!</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {products.map((product) => (
