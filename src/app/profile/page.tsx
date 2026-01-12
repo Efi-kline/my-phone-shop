@@ -1,15 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/utils/supabase/client';
 import Navbar from '@/components/Navbar';
 
 export default function ProfilePage() {
-  const [supabase] = useState(() =>
-    createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-  );
+  const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [formData, setFormData] = useState({ full_name: '', phone: '', address: '' });
@@ -20,10 +15,10 @@ export default function ProfilePage() {
       if (user) {
         setUser(user);
         const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-        if (data) setFormData({ 
-          full_name: data.full_name || '', 
-          phone: data.phone || '', 
-          address: data.address || '' 
+        if (data) setFormData({
+          full_name: data.full_name || '',
+          phone: data.phone || '',
+          address: data.address || ''
         });
       }
     };
@@ -69,7 +64,7 @@ export default function ProfilePage() {
             <input
               type="text"
               value={formData.full_name}
-              onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
               className="w-full p-4 border-2 border-gray-200 rounded-xl bg-gray-50 outline-none focus:border-[#c07830] transition-colors"
             />
           </div>
@@ -79,7 +74,7 @@ export default function ProfilePage() {
             <input
               type="tel"
               value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               className="w-full p-4 border-2 border-gray-200 rounded-xl bg-gray-50 outline-none focus:border-[#c07830] transition-colors"
               placeholder="050-0000000"
             />
@@ -89,7 +84,7 @@ export default function ProfilePage() {
             <label className="block text-sm font-bold mb-2 text-gray-700">כתובת למשלוח</label>
             <textarea
               value={formData.address}
-              onChange={(e) => setFormData({...formData, address: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               className="w-full p-4 border-2 border-gray-200 rounded-xl bg-gray-50 h-32 outline-none focus:border-[#c07830] transition-colors"
               placeholder="רחוב, מספר בית, עיר..."
             />

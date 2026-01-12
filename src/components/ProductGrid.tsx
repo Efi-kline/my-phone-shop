@@ -40,7 +40,22 @@ export default function ProductGrid({ products }: { products: Product[] }) {
             }
 
             const currentCart = profile?.cart || [];
-            const updatedCart = [...currentCart, product];
+
+            // בדיקה אם המוצר כבר קיים בעגלה
+            const existingItemIndex = currentCart.findIndex((item: any) => item.id === product.id);
+
+            let updatedCart;
+            if (existingItemIndex >= 0) {
+                // אם המוצר קיים, הגדל את הכמות
+                updatedCart = [...currentCart];
+                updatedCart[existingItemIndex] = {
+                    ...updatedCart[existingItemIndex],
+                    quantity: (updatedCart[existingItemIndex].quantity || 1) + 1
+                };
+            } else {
+                // אם המוצר חדש, הוסף אותו עם כמות 1
+                updatedCart = [...currentCart, { ...product, quantity: 1 }];
+            }
 
             const { error: updateError } = await supabase
                 .from('profiles')

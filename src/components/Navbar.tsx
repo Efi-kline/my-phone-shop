@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
   const [profile, setProfile] = useState<any>(null);
-  const [supabase] = useState(() => createClient());
+  const supabase = createClient();
   const router = useRouter();
 
   useEffect(() => {
@@ -37,8 +37,8 @@ export default function Navbar() {
       } else if (event === 'SIGNED_OUT') {
         setProfile(null);
         router.refresh();
-      } else {
-        fetchProfile();
+      } else if (event === 'INITIAL_SESSION') {
+        // בטעינה ראשונית לא עושים כלום, זה מטופל ב-fetchProfile
       }
     });
 
@@ -68,6 +68,13 @@ export default function Navbar() {
           </Link>
         )}
 
+        {/* כפתור ההזמנות שלי */}
+        {profile && (
+          <Link href="/orders" className="px-4 py-2 bg-[#c07830] text-[#f5e6d6] rounded-lg font-bold text-sm hover:bg-[#a86828] transition-all">
+            📦 ההזמנות שלי
+          </Link>
+        )}
+
         {/* כפתור סל קניות */}
         {profile && (
           <Link href="/cart" className="relative px-4 py-2 bg-[#c07830] text-[#f5e6d6] rounded-lg font-bold text-sm hover:bg-[#a86828] transition-all">
@@ -83,7 +90,7 @@ export default function Navbar() {
         {profile ? (
           <div className="flex items-center gap-3">
             <Link href="/profile" className="flex items-center gap-2 text-sm font-bold text-[#f5e6d6] hover:text-[#c07830] transition-colors px-3 py-2 rounded-lg">
-               👤 {profile.full_name?.split(' ')[0] || 'הפרופיל שלי'}
+              👤 {profile.full_name?.split(' ')[0] || 'הפרופיל שלי'}
             </Link>
             <button onClick={handleLogout} className="text-sm text-[#f5e6d6] font-medium hover:text-red-400 transition-colors">התנתק</button>
           </div>
