@@ -11,13 +11,10 @@ export default function Navbar() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      console.log('🔍 Navbar: מנסה לטעון פרופיל...');
       const { data: { user }, error: userError } = await supabase.auth.getUser();
-      console.log('👤 Navbar: משתמש מחובר?', user?.email, 'שגיאה?', userError);
 
       if (user) {
         const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-        console.log('📋 Navbar: פרופיל נטען:', data, 'שגיאה?', error);
         setProfile(data);
       } else {
         setProfile(null);
@@ -27,7 +24,6 @@ export default function Navbar() {
 
     // רענון כשיש שינוי בהתחברות
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.email);
 
       if (event === 'SIGNED_IN' && session?.user) {
         // טען את הפרופיל מיד אחרי התחברות
